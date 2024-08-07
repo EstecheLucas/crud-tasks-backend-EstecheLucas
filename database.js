@@ -1,4 +1,8 @@
+// Conexión a base de  datos
+
 const mysql2 = require("mysql2/promise")
+
+
 
 const newConnection = async () => {
     const connection = await mysql2.createConnection({
