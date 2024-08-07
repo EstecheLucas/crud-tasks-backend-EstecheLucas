@@ -9,8 +9,29 @@ app.get('/task', async (req, res) => {
    const connection = await newConnection()
    const result = await connection.query("SELECT * FROM tasks")
    res.json(result[0])
-   connection.end
+   connection.end()
 });
+
+// devilve las tareas por id
+app.get('/task/:id', async (req, res) => {
+   const connection = await newConnection();
+   const { id } = req.params;
+ 
+   try {
+     const [rows] = await connection.query("SELECT * FROM tasks WHERE id = ?", [id]);
+     
+     if (rows.length === 0) {
+       res.status(404).json({ message: "Tarea no encontrada" });
+     } else {
+       res.json(rows[0]);
+     }
+   } catch (error) {
+     res.status(500).json({ message: "Error al obtener la tarea", error: error.message });
+   } finally {
+     connection.end();
+   }
+ });
+ 
 
 
 
@@ -49,6 +70,28 @@ app.delete('/task/:id', async (req, res) => {
      connection.end();
    }
  });
-
+// Actualizar tarea
+app.put('/task/:id', async (req, res) => {
+   const connection = await newConnection();
+   const { id } = req.params;
+   const { title, description, isComplete } = req.body;
+ 
+   try {
+     const [result] = await connection.query(
+       "UPDATE tasks SET title = ?, description = ?, isComplete = ? WHERE id = ?",
+       [title, description, isComplete, id]
+     );
+ 
+     if (result.affectedRows === 0) {
+       res.status(404).json({ message: "Tarea no encontrada o no actualizada" });
+     } else {
+       res.status(200).json({ message: "La tarea se actualizó correctamente", id, title, description, isComplete });
+     }
+   } catch (error) {
+     res.status(500).json({ message: "Error al actualizar la tarea", error: error.message });
+   } finally {
+     connection.end();
+   }
+ });
 
 app.listen(3000, () => console.log('servidor corriendo en el puerto 3000'))
